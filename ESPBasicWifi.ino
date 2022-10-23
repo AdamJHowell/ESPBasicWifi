@@ -11,12 +11,16 @@ long rssi;													// A global to hold the Received Signal Strength Indicato
 unsigned int printInterval = 10000;					// How long to wait between MQTT publishes.
 unsigned long printCount = 0;							// A counter of how many times the stats have been published.
 unsigned long lastPrintTime = 0;						// The last time a MQTT publish was performed.
-unsigned long wifiConnectionTimeout = 20000;		// The amount of time to wait for a Wi-Fi connection.
+unsigned long wifiConnectionTimeout = 10000;		// The amount of time to wait for a Wi-Fi connection.
 const unsigned int MCU_LED = 2;						// The GPIO which the onboard LED is connected to.
-const char *wifiSsid = "Red5";
-const char *wifiPassword = "8012254722";
+const char *wifiSsid = "nunya";						// Wi-Fi SSID.
+const char *wifiPassword = "nunya";					// Wi-Fi password.
+const char *hostname = "GenericESP";				// The hostname.
 
 
+/**
+ * @brief lookupWifiCode() will return the string for an integer code.
+ */
 void lookupWifiCode( int code, char * buffer)
 {
 	switch( code )
@@ -45,21 +49,27 @@ void lookupWifiCode( int code, char * buffer)
 		default:
 			snprintf( buffer, 26, "%s", "Unknown Wi-Fi status code" );
 	}
-}
+} // End of lookupWifiCode() function.
 
 
+/**
+ * @brief wifiBasicConnect() will connect to a SSID.
+ */
 void wifiBasicConnect()
 {
  	// Turn the LED off to show Wi-Fi is not connected.
 	digitalWrite( MCU_LED, LOW );
 
 	Serial.printf( "Attempting to connect to Wi-Fi SSID '%s'", wifiSsid );
-	WiFi.setHostname( "GenericESP" );
+	WiFi.mode( WIFI_STA );
+	WiFi.config( INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE );
+	WiFi.setHostname( hostname );
 	WiFi.begin( wifiSsid, wifiPassword );
 
-	long currentTime = millis();
+	unsigned long wifiConnectionStartTime = millis();
 
-	while( WiFi.status() != WL_CONNECTED && millis() - wifiConnectionTimeout < currentTime )
+	// Loop until connected, or until wifiConnectionTimeout.
+	while( WiFi.status() != WL_CONNECTED && ( millis() - wifiConnectionStartTime < wifiConnectionTimeout ) )
 	{
 		Serial.print( "." );
 		delay( 1000 );
@@ -76,28 +86,43 @@ void wifiBasicConnect()
 		return;
 	}
   else
-    Serial.printf( "Wi-Fi failed to connect in the timeout period." );
-}
+    Serial.println( "Wi-Fi failed to connect in the timeout period.\n" );
+} // End of wifiBasicConnect() function.
 
 
+/**
+ * @brief readTelemetry() will read the telemetry to global variables.
+ */
 void readTelemetry()
 {
 	rssi = WiFi.RSSI();
-}
+} // End of readTelemetry() function.
 
 
+/**
+ * @brief printTelemetry() will print the telemetry to the serial port.
+ */
 void printTelemetry()
 {
 	printCount++;
 	Serial.printf( "Publish count %ld\n", printCount );
 	Serial.printf( "MAC address: %s\n", macAddress );
-	Serial.printf( "IP address: %s\n", ipAddress );
-	Serial.printf( "RSSI: %ld\n", rssi );
-  Serial.print( "Wi-Fi status: " );
-  Serial.println( WiFi.status() );
-}
+	int wifiStatusCode = WiFi.status();
+	char buffer[26];
+	lookupWifiCode( wifiStatusCode, buffer );
+	Serial.printf( "Wi-Fi status text: %s\n", buffer );
+	Serial.printf( "Wi-Fi status code: %d\n", wifiStatusCode );
+	if( wifiStatusCode == 3 )
+	{
+		Serial.printf( "IP address: %s\n", ipAddress );
+		Serial.printf( "RSSI: %ld\n", rssi );
+	}
+} // End of printTelemetry() function.
 
 
+/**
+ * @brief setup() will configure the program.
+ */
 void setup()
 {
 	// Start Serial communications.
@@ -113,15 +138,19 @@ void setup()
 
 	// Set the MAC address variable to its value.
 	snprintf( macAddress, 18, "%s", WiFi.macAddress().c_str() );
-
-	wifiBasicConnect();
-}
+} // End of setup() function.
 
 
+/**
+ * @brief loop() repeats over and over.
+ */
 void loop()
 {
-  if( WiFi.status() == WL_CONNECTED )
-    wifiBasicConnect();
+	if( WiFi.status() != WL_CONNECTED )
+	{
+		wifiBasicConnect();
+		// initWiFi();
+	}
 
 	long time = millis();
 	// Print the first time.  Avoid subtraction overflow.  Print every interval.
@@ -133,4 +162,4 @@ void loop()
 
 		Serial.printf( "Next print in %u seconds.\n\n", printInterval / 1000 );
 	}
-}
+} // End of loop() function.
