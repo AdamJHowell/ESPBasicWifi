@@ -11,7 +11,7 @@ long rssi;													// A global to hold the Received Signal Strength Indicato
 unsigned int printInterval = 10000;					// How long to wait between MQTT publishes.
 unsigned long printCount = 0;							// A counter of how many times the stats have been published.
 unsigned long lastPrintTime = 0;						// The last time a MQTT publish was performed.
-unsigned long wifiConnectionTimeout = 10000;		// The amount of time to wait for a Wi-Fi connection.
+unsigned long wifiConnectionTimeout = 15000;		// The amount of time to wait for a Wi-Fi connection.
 const unsigned int MCU_LED = 2;						// The GPIO which the onboard LED is connected to.
 const char *wifiSsid = "nunya";						// Wi-Fi SSID.
 const char *wifiPassword = "nunya";					// Wi-Fi password.
@@ -125,6 +125,7 @@ void printTelemetry()
  */
 void setup()
 {
+  delay( 1500 );
 	// Start Serial communications.
 	Serial.begin( 115200 );
 	if( !Serial )
