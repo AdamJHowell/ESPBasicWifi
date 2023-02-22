@@ -13,8 +13,8 @@ unsigned long printCount = 0;							// A counter of how many times the stats hav
 unsigned long lastPrintTime = 0;						// The last time a MQTT publish was performed.
 unsigned long wifiConnectionTimeout = 15000;		// The amount of time to wait for a Wi-Fi connection.
 const unsigned int MCU_LED = 2;						// The GPIO which the onboard LED is connected to.
-const char *wifiSsid = "nunya";						// Wi-Fi SSID.
-const char *wifiPassword = "nunya";					// Wi-Fi password.
+const char *wifiSsid = "Red5";						// Wi-Fi SSID.
+const char *wifiPassword = "8012254722";			// Wi-Fi password.
 const char *hostname = "GenericESP";				// The hostname.
 
 
@@ -129,7 +129,7 @@ void setup()
 	// Start Serial communications.
 	Serial.begin( 115200 );
 	if( !Serial )
-		delay( 500 );
+		delay( 1000 );
 	Serial.println( "\n\nsetup() is beginning." );
 
 	// Set GPIO 2 (MCU_LED) as an output.
@@ -148,10 +148,7 @@ void setup()
 void loop()
 {
 	if( WiFi.status() != WL_CONNECTED )
-	{
 		wifiBasicConnect();
-		// initWiFi();
-	}
 
 	long time = millis();
 	// Print the first time.  Avoid subtraction overflow.  Print every interval.
